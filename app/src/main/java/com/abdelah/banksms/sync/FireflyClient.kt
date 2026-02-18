@@ -1,7 +1,7 @@
 package com.abdelah.banksms.sync
 
-import android.util.Log
 import com.abdelah.banksms.db.TransactionEntity
+import com.abdelah.banksms.logging.AppLogger
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -40,7 +40,7 @@ class FireflyClient(
             val code = connection.responseCode
             code in 200..299
         } catch (e: Exception) {
-            Log.e("BankSMSSync", "Failed posting transaction ${transaction.id}", e)
+            AppLogger.e("BankSMSSync", "Failed posting transaction ${transaction.id}", e)
             false
         }
     }
