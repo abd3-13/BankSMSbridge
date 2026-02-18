@@ -1,7 +1,9 @@
 # AGENTS.md
 
 Project: SMS to Firefly III Android Sync App
+
 Language: Kotlin
+
 Architecture: Android-only (no backend)
 
 Mission:
@@ -28,10 +30,10 @@ Parsing Rules:
 - Always normalize:
     - amount
     - currency
-    - merchant
+    - bank name
     - timestamp
 - Extract a stable fingerprint:
-    hash(amount + timestamp + reference + normalized_merchant)
+    hash(amount + timestamp + reference + bank name)
 
 Deduplication:
 - Store fingerprint locally (Room/SQLite).
