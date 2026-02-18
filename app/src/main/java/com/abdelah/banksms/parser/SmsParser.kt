@@ -1,17 +1,20 @@
 package com.abdelah.banksms.parser
 
+import android.content.Context
 import com.abdelah.banksms.model.ParsedTransaction
+import com.abdelah.banksms.sync.SyncConfig
 import java.text.SimpleDateFormat
 import java.util.Date
 
 object SmsParser {
 
-fun parse(sender: String?, message: String, receivedTimeMillis: Long): ParsedTransaction? {
-    val baseTransaction = when {
-        message.contains("Commercial Bank of Ethiopia", true)
-                || message.contains("Thank you for Banking with CBE", true)
-                || sender?.contains("CBE", true) == true ->
-            parseCBE(message, receivedTimeMillis)
+    fun parse(context: Context, sender: String?, message: String, receivedTimeMillis: Long): ParsedTransaction? {
+        parseCustomConfigured(context, sender, message, receivedTimeMillis)?.let { return it }
+        val baseTransaction = when {
+            message.contains("Commercial Bank of Ethiopia", true)
+                    || message.contains("Thank you for Banking with CBE", true)
+                    || sender?.contains("CBE", true) == true ->
+                parseCBE(message, receivedTimeMillis)
 
         message.contains("Bank of Abyssinia", true) ->
             parseBoA(message, receivedTimeMillis)
@@ -24,11 +27,56 @@ fun parse(sender: String?, message: String, receivedTimeMillis: Long): ParsedTra
                 || message.contains("Enat", true) ->
             parseEnat(message, receivedTimeMillis)
 
-        else -> null
+            else -> null
+        }
+        return baseTransaction
     }
-    return baseTransaction
-}
-private fun parseCBE(message: String, receivedTimeMillis: Long): ParsedTransaction? {
+
+    private fun parseCustomConfigured(
+        context: Context,
+        sender: String?,
+        message: String,
+        receivedTimeMillis: Long
+    ): ParsedTransaction? {
+        val configuredSender = SyncConfig.getBankSender(context)
+        val configuredRegex = SyncConfig.getBankRegex(context)
+        if (configuredSender.isBlank() || configuredRegex.isBlank()) {
+            return null
+        }
+
+        if (sender.isNullOrBlank() || !sender.contains(configuredSender, ignoreCase = true)) {
+            return null
+        }
+
+        val match = try {
+            Regex(configuredRegex, setOf(RegexOption.IGNORE_CASE)).find(message)
+        } catch (_: IllegalArgumentException) {
+            null
+        } ?: return null
+
+        val amount = match.groupValues.getOrNull(1)
+            ?.replace(",", "")
+            ?.toDoubleOrNull()
+            ?: return null
+
+        val type = when {
+            message.contains("credit", true) || message.contains("received", true) -> "credit"
+            else -> "debit"
+        }
+
+        val dateTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date(receivedTimeMillis))
+        return ParsedTransaction(
+            bank = "Custom",
+            type = type,
+            amount = amount,
+            dateTime = dateTime,
+            description = "Custom regex import",
+            reference = extractUrlRef(message) ?: extractTransactionNumber(message) ?: extractRefNumber(message),
+            rawMessage = message
+        )
+    }
+
+    private fun parseCBE(message: String, receivedTimeMillis: Long): ParsedTransaction? {
     val debitRegex = Regex("""transfered ETB ([\d,]+\.\d{2})""")
     val creditRegex = Regex("""credited.*ETB ([\d,]+\.\d{2})""")
     val dateRegex = Regex("""on (\d{2}/\d{2}/\d{4} at \d{2}:\d{2}:\d{2})""")
