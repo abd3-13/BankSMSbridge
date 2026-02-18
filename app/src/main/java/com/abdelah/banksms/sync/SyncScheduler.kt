@@ -33,7 +33,8 @@ object SyncScheduler {
     }
 
     fun ensurePeriodic(context: Context) {
-        val periodic = PeriodicWorkRequestBuilder<TransactionSyncWorker>(15, TimeUnit.MINUTES)
+        val intervalMinutes = SyncConfig.getRetryIntervalMinutes(context)
+        val periodic = PeriodicWorkRequestBuilder<TransactionSyncWorker>(intervalMinutes, TimeUnit.MINUTES)
             .setConstraints(networkConstraints)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
@@ -41,6 +42,20 @@ object SyncScheduler {
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             UNIQUE_PERIODIC_SYNC_WORK,
             ExistingPeriodicWorkPolicy.KEEP,
+            periodic
+        )
+    }
+
+    fun reconfigurePeriodic(context: Context) {
+        val intervalMinutes = SyncConfig.getRetryIntervalMinutes(context)
+        val periodic = PeriodicWorkRequestBuilder<TransactionSyncWorker>(intervalMinutes, TimeUnit.MINUTES)
+            .setConstraints(networkConstraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            UNIQUE_PERIODIC_SYNC_WORK,
+            ExistingPeriodicWorkPolicy.UPDATE,
             periodic
         )
     }

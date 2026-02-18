@@ -27,7 +27,7 @@ class SmsReceiver : BroadcastReceiver() {
                 val messageBody = sms.messageBody
 
                 Log.d("BankSMS", "Sender: $sender")
-                val parsed = SmsParser.parse(sender, messageBody, sms.timestampMillis)
+                val parsed = SmsParser.parse(context, sender, messageBody, sms.timestampMillis)
 
                 parsed?.let { tx ->
                     val entity = TransactionEntity(
