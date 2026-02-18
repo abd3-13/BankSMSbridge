@@ -46,7 +46,9 @@ class FireflyClient(
     }
 
     private fun buildPayload(transaction: TransactionEntity): String {
+        // Firefly transaction type src https://api-docs.firefly-iii.org/#/transactions/storeTransaction
         val type = if (transaction.type.equals("credit", true)) "deposit" else "withdrawal"
+        
 
         val attributes = JSONObject().apply {
             put("type", type)
