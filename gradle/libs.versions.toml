@@ -9,6 +9,8 @@ coreKtx = "1.17.0"
 activityCompose = "1.12.4"
 lifecycleRuntimeKtx = "2.10.0"
 kotlinxCoroutinesAndroid = "1.7.3"
+workRuntimeKtx = "2.10.2"
+junit4 = "4.13.2"
 
 ksp = "2.0.21-1.0.27"
 
@@ -22,6 +24,8 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit4" }
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }

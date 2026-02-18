@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.abdelah.banksms.ui.theme.BankSMSTheme
 import androidx.compose.foundation.layout.padding
+import com.abdelah.banksms.sync.SyncScheduler
 
 
 class MainActivity : ComponentActivity() {
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        SyncScheduler.ensurePeriodic(this)
 
         setContent {
             BankSMSTheme {

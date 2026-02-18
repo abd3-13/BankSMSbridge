@@ -47,17 +47,18 @@ It extracts key transaction fields such as:
 
 ---
 
-## Planned Capability (Next Step)
+## Sync Capability (Implemented)
 
-The Firefly III synchronization loop is the next major feature:
+The Firefly III synchronization loop is now implemented:
 
-- A background worker/service will read `PENDING`/`FAILED` rows.
-- It will check network and Firefly III availability.
-- It will transform local transactions into Firefly III-compatible payloads.
-- Successful posts will be marked `SENT`.
-- Failures will be marked `FAILED` and retried with backoff.
+- A WorkManager-based background worker reads `PENDING` and `FAILED` rows.
+- The worker checks network availability before attempting sync.
+- Transactions are transformed into Firefly III transaction payloads and posted via API token auth.
+- Successful posts are marked `SENT`.
+- Failures are marked `FAILED` and retried with exponential backoff.
+- A periodic sync job is scheduled when the app starts, and immediate one-off sync is triggered when a new transaction is saved.
 
-This design ensures transactions are not lost when the phone is offline or the Firefly III server is temporarily unavailable.
+This ensures transactions are retried and eventually delivered when connectivity or API availability recovers.
 
 ---
 
@@ -67,7 +68,7 @@ This design ensures transactions are not lost when the phone is offline or the F
 - **Parsing Layer**: `SmsParser` routes messages to bank-specific regex parsers.
 - **Local Storage**: Room database (`AppDatabase`, `TransactionDao`, `TransactionEntity`).
 - **UI**: Minimal Compose activity confirming the app is running.
-- **(Planned) Sync Engine**: Background component for Firefly III posting and retries.
+- **Sync Engine**: WorkManager + sync repository/client for Firefly III posting and retries.
 
 ---
 
