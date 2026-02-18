@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -109,10 +110,47 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
-
         Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
         StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Button(
+                onClick = {
+                    saveMessage = "Stats refreshed"
+                    refreshTrigger++
+                }
+            ) {
+                Text("Refresh stats")
+            }
+
+            Button(
+                onClick = {
+                    val retry = retryInterval.toLongOrNull() ?: 15L
+                    val plugins = SmsParsePlugin.listFromJson(parserPluginsJson)
+                    if (plugins == null || plugins.isEmpty()) {
+                        saveMessage = "Parser plugins JSON is invalid or empty"
+                        return@Button
+                    }
+
+                    SyncConfig.save(
+                        context = context,
+                        baseUrl = fireflyUrl,
+                        token = fireflyToken,
+                        retryIntervalMinutes = retry,
+                        parserPluginsJson = SmsParsePlugin.listToJson(plugins)
+                    )
+                    SyncScheduler.reconfigurePeriodic(context)
+                    saveMessage = "Settings saved"
+                    refreshTrigger++
+                }
+            ) {
+                Text("Save")
+            }
+        }
+
+        HorizontalDivider()
+
+        Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
 
         if (saveMessage.isNotBlank()) {
             Text(saveMessage, color = MaterialTheme.colorScheme.primary)
@@ -142,47 +180,18 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             singleLine = true
         )
 
-        OutlinedTextField(
-            value = parserPluginsJson,
-            onValueChange = { parserPluginsJson = it },
-            label = { Text("Parser plugins JSON") },
-            supportingText = { Text("Each plugin defines sender, hints, debit/credit regex and optional refs") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        TextButton(onClick = { isPluginsExpanded = !isPluginsExpanded }) {
+            Text(if (isPluginsExpanded) "Hide parser plugins" else "Show parser plugins")
+        }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(
-                onClick = {
-                    val retry = retryInterval.toLongOrNull() ?: 15L
-                    val plugins = SmsParsePlugin.listFromJson(parserPluginsJson)
-                    if (plugins == null || plugins.isEmpty()) {
-                        saveMessage = "Parser plugins JSON is invalid or empty"
-                        return@Button
-                    }
-
-                    SyncConfig.save(
-                        context = context,
-                        baseUrl = fireflyUrl,
-                        token = fireflyToken,
-                        retryIntervalMinutes = retry,
-                        parserPluginsJson = SmsParsePlugin.listToJson(plugins)
-                    )
-                    SyncScheduler.reconfigurePeriodic(context)
-                    saveMessage = "Settings saved"
-                    refreshTrigger++
-                }
-            ) {
-                Text("Save")
-            }
-
-            Button(
-                onClick = {
-                    saveMessage = "Stats refreshed"
-                    refreshTrigger++
-                }
-            ) {
-                Text("Refresh stats")
-            }
+        if (isPluginsExpanded) {
+            OutlinedTextField(
+                value = parserPluginsJson,
+                onValueChange = { parserPluginsJson = it },
+                label = { Text("Parser plugins JSON") },
+                supportingText = { Text("Each plugin defines sender, hints, debit/credit regex and optional refs") },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
     }
