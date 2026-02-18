@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -40,9 +39,6 @@ android {
     buildFeatures {
         compose = true
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
 dependencies {
@@ -61,5 +57,4 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
 
-    testImplementation(libs.junit)
 }
