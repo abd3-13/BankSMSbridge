@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.abdelah.banksms.db.AppDatabase
+import com.abdelah.banksms.parser.SmsParsePlugin
 import com.abdelah.banksms.sync.SyncConfig
 import com.abdelah.banksms.sync.SyncScheduler
 import com.abdelah.banksms.ui.theme.BankSMSTheme
@@ -79,9 +81,9 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
     var fireflyUrl by remember { mutableStateOf("") }
     var fireflyToken by remember { mutableStateOf("") }
     var retryInterval by remember { mutableStateOf("15") }
-    var bankSender by remember { mutableStateOf("") }
-    var bankRegex by remember { mutableStateOf("") }
+    var parserPluginsJson by remember { mutableStateOf("") }
     var saveMessage by remember { mutableStateOf("") }
+    var isPluginsExpanded by remember { mutableStateOf(false) }
 
     var totalParsed by remember { mutableIntStateOf(0) }
     var totalSynced by remember { mutableIntStateOf(0) }
@@ -93,8 +95,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
         fireflyUrl = settings.baseUrl
         fireflyToken = settings.token
         retryInterval = settings.retryIntervalMinutes.toString()
-        bankSender = settings.bankSender
-        bankRegex = settings.bankRegex
+        parserPluginsJson = settings.parserPluginsJson
 
         val dao = AppDatabase.getDatabase(context).transactionDao()
         totalParsed = withContext(Dispatchers.IO) { dao.countAll() }
@@ -109,6 +110,13 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
+
+        Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
+        StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
+
+        if (saveMessage.isNotBlank()) {
+            Text(saveMessage, color = MaterialTheme.colorScheme.primary)
+        }
 
         OutlinedTextField(
             value = fireflyUrl,
@@ -134,32 +142,51 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             singleLine = true
         )
 
-        OutlinedTextField(
-            value = bankSender,
-            onValueChange = { bankSender = it },
-            label = { Text("Bank sender number") },
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Parser plugins", style = MaterialTheme.typography.titleMedium)
+                    TextButton(onClick = { isPluginsExpanded = !isPluginsExpanded }) {
+                        Text(if (isPluginsExpanded) "Collapse" else "Expand")
+                    }
+                }
 
-        OutlinedTextField(
-            value = bankRegex,
-            onValueChange = { bankRegex = it },
-            label = { Text("Regex import pattern (amount in group 1)") },
-            modifier = Modifier.fillMaxWidth()
-        )
+                Text(
+                    "Configure sender/hints and debit-credit regex patterns for each bank.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                if (isPluginsExpanded) {
+                    OutlinedTextField(
+                        value = parserPluginsJson,
+                        onValueChange = { parserPluginsJson = it },
+                        label = { Text("Parser plugins JSON") },
+                        supportingText = { Text("Each plugin defines sender, hints, debit/credit regex and optional refs") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
                 onClick = {
                     val retry = retryInterval.toLongOrNull() ?: 15L
+                    val plugins = SmsParsePlugin.listFromJson(parserPluginsJson)
+                    if (plugins == null || plugins.isEmpty()) {
+                        saveMessage = "Parser plugins JSON is invalid or empty"
+                        return@Button
+                    }
+
                     SyncConfig.save(
                         context = context,
                         baseUrl = fireflyUrl,
                         token = fireflyToken,
                         retryIntervalMinutes = retry,
-                        bankSender = bankSender,
-                        bankRegex = bankRegex
+                        parserPluginsJson = SmsParsePlugin.listToJson(plugins)
                     )
                     SyncScheduler.reconfigurePeriodic(context)
                     saveMessage = "Settings saved"
@@ -179,12 +206,6 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        if (saveMessage.isNotBlank()) {
-            Text(saveMessage, color = MaterialTheme.colorScheme.primary)
-        }
-
-        Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
-        StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
     }
 }
 
