@@ -4,8 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
-import android.util.Log
 import com.abdelah.banksms.db.AppDatabase
+import com.abdelah.banksms.logging.AppLogger
 import com.abdelah.banksms.db.TransactionEntity
 import com.abdelah.banksms.parser.SmsParser
 import com.abdelah.banksms.sync.SyncScheduler
@@ -26,7 +26,7 @@ class SmsReceiver : BroadcastReceiver() {
                 val sender = sms.originatingAddress ?: "Unknown"
                 val messageBody = sms.messageBody
 
-                Log.d("BankSMS", "Sender: $sender")
+                AppLogger.d("BankSMS", "Sender: $sender")
                 val parsed = SmsParser.parse(context, sender, messageBody, sms.timestampMillis)
 
                 parsed?.let { tx ->
@@ -46,7 +46,7 @@ class SmsReceiver : BroadcastReceiver() {
                     val db = AppDatabase.getDatabase(context)
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                         val insertedId = db.transactionDao().insert(entity)
-                        Log.d("BankSMS", "Saved to DB: $entity (id=$insertedId)")
+                        AppLogger.d("BankSMS", "Saved to DB: $entity (id=$insertedId)")
                         if (insertedId > 0) {
                             SyncScheduler.enqueueImmediate(context)
                         }
@@ -54,9 +54,9 @@ class SmsReceiver : BroadcastReceiver() {
                 }
 
                 if (parsed != null) {
-                    Log.d("BankSMS", "Parsed: $parsed")
+                    AppLogger.d("BankSMS", "Parsed: $parsed")
                 } else {
-                    Log.d("BankSMS", "Not recognized format")
+                    AppLogger.d("BankSMS", "Not recognized format")
                 }
 
             }
