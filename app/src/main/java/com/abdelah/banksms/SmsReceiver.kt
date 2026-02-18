@@ -8,6 +8,7 @@ import android.util.Log
 import com.abdelah.banksms.db.AppDatabase
 import com.abdelah.banksms.db.TransactionEntity
 import com.abdelah.banksms.parser.SmsParser
+import com.abdelah.banksms.sync.SyncScheduler
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,8 +45,11 @@ class SmsReceiver : BroadcastReceiver() {
                     // Insert into DB
                     val db = AppDatabase.getDatabase(context)
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                        db.transactionDao().insert(entity)
-                        Log.d("BankSMS", "Saved to DB: $entity")
+                        val insertedId = db.transactionDao().insert(entity)
+                        Log.d("BankSMS", "Saved to DB: $entity (id=$insertedId)")
+                        if (insertedId > 0) {
+                            SyncScheduler.enqueueImmediate(context)
+                        }
                     }
                 }
 
