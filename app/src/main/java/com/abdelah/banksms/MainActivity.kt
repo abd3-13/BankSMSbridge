@@ -92,6 +92,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
     var totalSynced by remember { mutableIntStateOf(0) }
     var totalFailed by remember { mutableIntStateOf(0) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(refreshTrigger) {
         val settings = SyncConfig.load(context)
