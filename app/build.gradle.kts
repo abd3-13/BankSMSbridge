@@ -18,14 +18,24 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+    }
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    signingConfigs {
+        create("release") {
+            val storeFilePath = System.getenv("MYAPP_UPLOAD_STORE_FILE")
+            storeFile = file(storeFilePath)
+
+            storePassword = System.getenv("MYAPP_UPLOAD_STORE_PASSWORD")
+            keyAlias = System.getenv("MYAPP_UPLOAD_KEY_ALIAS")
+            keyPassword = System.getenv("MYAPP_UPLOAD_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
