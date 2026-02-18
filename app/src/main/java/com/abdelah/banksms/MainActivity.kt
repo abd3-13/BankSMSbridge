@@ -142,34 +142,13 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             singleLine = true
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Parser plugins", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { isPluginsExpanded = !isPluginsExpanded }) {
-                        Text(if (isPluginsExpanded) "Collapse" else "Expand")
-                    }
-                }
-
-                Text(
-                    "Configure sender/hints and debit-credit regex patterns for each bank.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                if (isPluginsExpanded) {
-                    OutlinedTextField(
-                        value = parserPluginsJson,
-                        onValueChange = { parserPluginsJson = it },
-                        label = { Text("Parser plugins JSON") },
-                        supportingText = { Text("Each plugin defines sender, hints, debit/credit regex and optional refs") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
+        OutlinedTextField(
+            value = parserPluginsJson,
+            onValueChange = { parserPluginsJson = it },
+            label = { Text("Parser plugins JSON") },
+            supportingText = { Text("Each plugin defines sender, hints, debit/credit regex and optional refs") },
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(
