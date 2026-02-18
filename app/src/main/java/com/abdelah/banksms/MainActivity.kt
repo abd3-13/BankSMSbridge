@@ -110,6 +110,8 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
+        HorizontalDivider()
         Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
         StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
 
@@ -144,13 +146,13 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     refreshTrigger++
                 }
             ) {
-                Text("Save")
+                Text("Save Settings")
             }
         }
 
         HorizontalDivider()
 
-        Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
+       
 
         if (saveMessage.isNotBlank()) {
             Text(saveMessage, color = MaterialTheme.colorScheme.primary)
