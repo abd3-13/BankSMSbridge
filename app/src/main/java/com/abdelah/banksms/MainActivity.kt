@@ -42,6 +42,8 @@ import com.abdelah.banksms.sync.SyncScheduler
 import com.abdelah.banksms.ui.theme.BankSMSTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -120,6 +122,11 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                 onClick = {
                     saveMessage = "Stats refreshed"
                     refreshTrigger++
+                    // Launch a coroutine to clear the message after 5 seconds
+                    scope.launch {
+                      delay(5000) // 5 seconds
+                      saveMessage = ""
+                    }
                 }
             ) {
                 Text("Refresh stats")
@@ -144,6 +151,11 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     SyncScheduler.reconfigurePeriodic(context)
                     saveMessage = "Settings saved"
                     refreshTrigger++
+                    // Launch a coroutine to clear the message after 5 seconds
+                    scope.launch {
+                      delay(5000) // 5 seconds
+                      saveMessage = ""
+                    }
                 }
             ) {
                 Text("Save Settings")
