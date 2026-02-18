@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -82,6 +83,7 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
     var retryInterval by remember { mutableStateOf("15") }
     var parserPluginsJson by remember { mutableStateOf("") }
     var saveMessage by remember { mutableStateOf("") }
+    var isPluginsExpanded by remember { mutableStateOf(false) }
 
     var totalParsed by remember { mutableIntStateOf(0) }
     var totalSynced by remember { mutableIntStateOf(0) }
@@ -108,6 +110,13 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text("Bank SMS Bridge Settings", style = MaterialTheme.typography.headlineSmall)
+
+        Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
+        StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
+
+        if (saveMessage.isNotBlank()) {
+            Text(saveMessage, color = MaterialTheme.colorScheme.primary)
+        }
 
         OutlinedTextField(
             value = fireflyUrl,
@@ -176,12 +185,6 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
             }
         }
 
-        if (saveMessage.isNotBlank()) {
-            Text(saveMessage, color = MaterialTheme.colorScheme.primary)
-        }
-
-        Text("Sync Stats", style = MaterialTheme.typography.titleMedium)
-        StatsCard(totalParsed = totalParsed, totalSynced = totalSynced, totalFailed = totalFailed)
     }
 }
 
