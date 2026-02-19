@@ -138,8 +138,8 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     refreshTrigger++
                     // Launch a coroutine to clear the message after 5 seconds
                     scope.launch {
-                      delay(5000) // 5 seconds
-                      saveMessage = ""
+                        delay(5000) // 5 seconds
+                        saveMessage = ""
                     }
                 }
             ) {
@@ -167,12 +167,25 @@ private fun SettingsScreen(modifier: Modifier = Modifier) {
                     refreshTrigger++
                     // Launch a coroutine to clear the message after 5 seconds
                     scope.launch {
-                      delay(5000) // 5 seconds
-                      saveMessage = ""
+                        delay(5000) // 5 seconds
+                        saveMessage = ""
                     }
                 }
             ) {
                 Text("Save Settings")
+            }
+
+            Button(
+                onClick = {
+                    SyncScheduler.enqueueImmediate(context)
+                    saveMessage = "Sync started"
+                    scope.launch {
+                        delay(5000) // 5 seconds
+                        saveMessage = ""
+                    }
+                }
+            ) {
+                Text("Sync now")
             }
         }
 
