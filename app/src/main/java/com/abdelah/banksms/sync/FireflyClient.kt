@@ -55,8 +55,16 @@ class FireflyClient(
             put("date", toIsoTimestamp(transaction.dateTime))
             put("amount", String.format(java.util.Locale.US, "%.2f", transaction.amount))
             put("description", transaction.description ?: "${transaction.bank} ${transaction.type}")
-            put("source_name", accountNameFor(transaction.bank))
-            put("destination_name", accountNameFor(transaction.bank))
+            
+            if (type == "deposit") {
+              // Money coming INTO the bank account
+              put("destination_name", transaction.bank)
+              // Do NOT include source_name
+            } else {
+              // Money leaving the bank account
+              put("source_name", transaction.bank)
+              // Do NOT include destination_name
+            }
             put("currency_code", transaction.currency)
             put("external_id", transaction.reference ?: "tx-${transaction.id}")
             put("notes", transaction.rawMessage)
@@ -76,7 +84,4 @@ class FireflyClient(
         return if (normalized.contains("+")) normalized else "${normalized}+00:00"
     }
 
-    private fun accountNameFor(bank: String): String {
-        return bank
-    }
-}
+
