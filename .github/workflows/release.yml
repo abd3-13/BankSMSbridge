@@ -50,6 +50,7 @@ jobs:
           TAG="${{ inputs.tag_name }}"
         else
           TAG=${GITHUB_REF#refs/tags/}
+          TAG=${GITHUB_REF#refs/heads/main}
         fi
 
         VERSION_NAME=${TAG#v}
