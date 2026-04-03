@@ -83,5 +83,7 @@ class FireflyClient(
         val normalized = dbDate.replace(' ', 'T')
         return if (normalized.contains("+")) normalized else "${normalized}+00:00"
     }
+}
+
 
 
