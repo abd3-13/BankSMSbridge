@@ -66,14 +66,12 @@ jobs:
     - name: Decode keystore
       run: |
         echo "${{ secrets.MYAPP_UPLOAD_STORE_FILE_BASE64 }}" | base64 -d > keystore.jks
-        echo ">> Location of keystore.jks is:"
-        find / -iname keystore.jks 2>/dev/null
 
     # 🏗 Build signed APK
     - name: Build APK
       run: ./gradlew assembleRelease
       env:
-        MYAPP_UPLOAD_STORE_FILE: keystore.jks
+        MYAPP_UPLOAD_STORE_FILE: ../keystore.jks
         MYAPP_UPLOAD_STORE_PASSWORD: ${{ secrets.MYAPP_UPLOAD_STORE_PASSWORD }}
         MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.MYAPP_UPLOAD_KEY_ALIAS }}
         MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.MYAPP_UPLOAD_KEY_PASSWORD }}
