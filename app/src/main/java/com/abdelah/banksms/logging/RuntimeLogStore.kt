@@ -1,6 +1,7 @@
 package com.abdelah.banksms.logging
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,6 +11,7 @@ import java.util.Date
 import java.util.Locale
 
 object RuntimeLogStore {
+    private const val TAG = "RuntimeLogStore"
     private const val MAX_LOG_LINES = 500
     private const val LOG_DIR = "logs"
     private const val LOG_FILE = "app.log"
@@ -25,17 +27,21 @@ object RuntimeLogStore {
         synchronized(lock) {
             if (logFile != null) return
 
-            val dir = File(context.applicationContext.filesDir, LOG_DIR)
-            if (!dir.exists()) {
-                dir.mkdirs()
-            }
-            val file = File(dir, LOG_FILE)
-            if (!file.exists()) {
-                file.createNewFile()
-            }
+            runCatching {
+                val dir = File(context.applicationContext.filesDir, LOG_DIR)
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                val file = File(dir, LOG_FILE)
+                if (!file.exists()) {
+                    file.createNewFile()
+                }
 
-            logFile = file
-            _logs.value = file.readLines().takeLast(MAX_LOG_LINES)
+                logFile = file
+                _logs.value = file.readLines().takeLast(MAX_LOG_LINES)
+            }.onFailure {
+                Log.w(TAG, "Failed to initialize persisted logs", it)
+            }
         }
     }
 
@@ -43,7 +49,12 @@ object RuntimeLogStore {
         val entry = "${timestamp()} [$level/$tag] $message"
 
         synchronized(lock) {
-            logFile?.appendText("$entry\n")
+            runCatching {
+                logFile?.appendText("$entry\n")
+            }.onFailure {
+                Log.w(TAG, "Failed to persist log line", it)
+            }
+
             _logs.value = (_logs.value + entry).takeLast(MAX_LOG_LINES)
         }
     }
