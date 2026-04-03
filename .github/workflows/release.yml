@@ -1,76 +1,113 @@
-name: Build Signed APK
+name: BankSMS CI
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [ "main"]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create an Official GitHub Release?'
+        required: true
+        type: boolean
+        default: false
+      tag_name:
+        description: 'Tag name (Only used if Release is checked)'
+        required: false
+        default: 'test'
+
 
 jobs:
   build:
+    name: Build Android Apk
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 Checkout
-      - name: Checkout
-        uses: actions/checkout@v4
+    # 📥 Checkout
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      # ☕ Java
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
+    # ☕ Java
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
 
-      # 🤖 Android SDK
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+    # 🤖 Android SDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
 
-      # 🔢 Extract version from tag
-      - name: Extract version
-        id: version
-        run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          # Remove leading "v" if present
-          VERSION_NAME=${TAG#v}
+    # 🔢 Extract version from tag
+    - name: Extract version
+      id: version
+      run: |
+        TAG=${GITHUB_REF#refs/tags/}
+        # Remove leading "v" if present
+        VERSION_NAME=${TAG#v}
 
-          # Fallback if empty or invalid
-          if [ -z "$VERSION_NAME" ]; then
-            VERSION_NAME="1.0"
-          fi
+        # Fallback if empty or invalid
+        if [ -z "$VERSION_NAME" ]; then
+          VERSION_NAME="1.0"
+        fi
 
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-          # Version code (safe fallback too)
-          VERSION_CODE=$(date +%s)
-          if [ -z "$VERSION_CODE" ]; then
-            VERSION_CODE=1
-          fi
+        # Version code (safe fallback too)
+        VERSION_CODE=$(date +%s)
+        if [ -z "$VERSION_CODE" ]; then
+          VERSION_CODE=1
+        fi
 
-          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
 
-      # 🔐 Decode keystore
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.MYAPP_UPLOAD_STORE_FILE_BASE64 }}" | base64 -d > keystore.jks
+    # 🔐 Decode keystore
+    - name: Decode keystore
+      run: |
+        echo "${{ secrets.MYAPP_UPLOAD_STORE_FILE_BASE64 }}" | base64 -d > keystore.jks
 
-      # 🏗 Build signed APK
-      - name: Build APK
-        run: ./gradlew assembleRelease
-        env:
-          MYAPP_UPLOAD_STORE_FILE: keystore.jks
-          MYAPP_UPLOAD_STORE_PASSWORD: ${{ secrets.MYAPP_UPLOAD_STORE_PASSWORD }}
-          MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.MYAPP_UPLOAD_KEY_ALIAS }}
-          MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.MYAPP_UPLOAD_KEY_PASSWORD }}
-          VERSION_NAME: ${{ env.VERSION_NAME }}
-          VERSION_CODE: ${{ env.VERSION_CODE }}
+    # 🏗 Build signed APK
+    - name: Build APK
+      run: ./gradlew assembleRelease
+      env:
+        MYAPP_UPLOAD_STORE_FILE: keystore.jks
+        MYAPP_UPLOAD_STORE_PASSWORD: ${{ secrets.MYAPP_UPLOAD_STORE_PASSWORD }}
+        MYAPP_UPLOAD_KEY_ALIAS: ${{ secrets.MYAPP_UPLOAD_KEY_ALIAS }}
+        MYAPP_UPLOAD_KEY_PASSWORD: ${{ secrets.MYAPP_UPLOAD_KEY_PASSWORD }}
+        VERSION_NAME: ${{ env.VERSION_NAME }}
+        VERSION_CODE: ${{ env.VERSION_CODE }}
 
-      # 📦 Rename APK (clean output)
-      - name: Rename APK
-        run: |
-          mv app/build/outputs/apk/release/app-release.apk BankSMS-${{ env.VERSION_NAME }}.apk
+    # 📦 Rename APK (clean output)
+    - name: Rename APK
+      run: |
+        mv app/build/outputs/apk/release/app-release.apk BankSMS-${{ env.VERSION_NAME }}.apk
+          
+    # Prepare changelogs
+    - name: Generate Changelog
+      id: changelog
+      run: |
+        PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        echo "Previous tag: $PREV_TAG"
 
-      # 🚀 Upload to GitHub Release
-      - name: Upload Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: BankSMS-${{ env.VERSION_NAME }}.apk
+        if [ -z "$PREV_TAG" ]; then
+          CHANGELOG=$(git log --oneline --pretty=format:"* %s (%h)")
+        else
+          CHANGELOG=$(git log ${PREV_TAG}..HEAD --oneline --pretty=format:"* %s (%h)")
+        fi
+
+        {
+          echo "notes<<EOF"
+          echo "$CHANGELOG"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+        
+    # 🚀 Upload to GitHub Release
+    - name: Upload Release
+      uses: softprops/action-gh-release@v2
+        
+      with:
+        body: |
+          ## What's Changed
+          ${{ steps.changelog.outputs.notes }}
+        files: BankSMS-${{ env.VERSION_NAME }}.apk
