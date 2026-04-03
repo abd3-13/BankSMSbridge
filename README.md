@@ -94,7 +94,7 @@ These are required for receiving/parsing SMS and later syncing to Firefly III ov
 ### Build from command line
 
 ```bash
-./gradlew :app:assembleDebug
+./gradlew :app:assembleRelease 
 ```
 
 ### Run
