@@ -45,6 +45,14 @@ jobs:
     - name: Extract version
       id: version
       run: |
+        echo "[INFO] >> GITHUB_REF : $GITHUB_REF"
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.tag_name }}" ]; then
+          TAG="${{ inputs.tag_name }}"
+        else
+          TAG=${GITHUB_REF#refs/tags/}
+        fi
+
+        VERSION_NAME=${TAG#v}
         # Fallback if empty or invalid
         if [ -z "$VERSION_NAME" ]; then
           VERSION_NAME="1.0"
@@ -104,13 +112,16 @@ jobs:
         
     # 🚀 Upload to GitHub Release
     - name: Upload Release
+      if: |
+        github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') ||
+        github.event_name == 'workflow_dispatch' && inputs.create_release == true
       uses: softprops/action-gh-release@v2
         
       with:
-        name: BankSMS CI Release
+        name: BankSMS v${{ env.VERSION_NAME }}
         tag_name: BankSMS-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}
         target_commitish: ${{ github.sha }}
         body: |
           ## What's Changed
           ${{ steps.changelog.outputs.notes }}
-        files: BankSMS-${{ env.VERSION_NAME }}.apk
+        files: BankSMS-${{ env.VERSION_NAME }}-${{ env.VERSION_CODE }}.apk
