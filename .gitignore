@@ -18,9 +18,6 @@
 /*.iml
 /.gradle/
 
-# Gradle Wrapper logs
-/gradle/wrapper/gradle-wrapper.properties
-
 # Android Studio
 captures/
 .externalNativeBuild/
