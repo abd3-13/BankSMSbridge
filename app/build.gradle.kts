@@ -1,8 +1,12 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+val versionNameFromEnv = System.getenv("VERSION_NAME") ?: "1.0"
+val versionCodeFromEnv = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
 
 android {
     namespace = "com.abdelah.banksms"
@@ -16,8 +20,8 @@ android {
         applicationId = "com.abdelah.banksms"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionCodeFromEnv
+        versionName = versionNameFromEnv
     }
 
     signingConfigs {
