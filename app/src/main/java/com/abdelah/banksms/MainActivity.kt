@@ -16,11 +16,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -266,7 +270,19 @@ private fun HomeTabContent(
             Text("Dashboard", style = MaterialTheme.typography.headlineMedium)
         }
         item {
-            StatsGrid(stats = stats)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 260.dp),
+                userScrollEnabled = false,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(stats) { (label, value) ->
+                    StatGridCard(title = label, value = value.toString())
+                }
+            }
         }
         item {
             Button(onClick = onRefresh) {
@@ -308,27 +324,6 @@ private fun LogsTabContent(
     ) {
         Text("Logs", style = MaterialTheme.typography.headlineMedium)
         LogViewer(isExpanded = isExpanded, onToggle = onToggle)
-    }
-}
-
-@Composable
-private fun StatsGrid(stats: List<Pair<String, Int>>) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        stats.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowItems.forEach { (label, value) ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        StatGridCard(title = label, value = value.toString())
-                    }
-                }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
     }
 }
 
