@@ -43,10 +43,6 @@ jobs:
     - name: Extract version
       id: version
       run: |
-        TAG=${GITHUB_REF#refs/tags/}
-        # Remove leading "v" if present
-        VERSION_NAME=${TAG#v}
-
         # Fallback if empty or invalid
         if [ -z "$VERSION_NAME" ]; then
           VERSION_NAME="1.0"
@@ -81,8 +77,10 @@ jobs:
     # 📦 Rename APK (clean output)
     - name: Rename APK
       run: |
-        mv app/build/outputs/apk/release/app-release.apk BankSMS-${{ env.VERSION_NAME }}.apk
-          
+        APK_PATH="app/build/outputs/apk/release/app-release.apk"
+        [ -e $APK_PATH ] || { echo "[ERR] > Build failed!"; exit 1; }
+        mv $APK_PATH BankSMS-${{ env.VERSION_NAME }}.apk
+
     # Prepare changelogs
     - name: Generate Changelog
       id: changelog
