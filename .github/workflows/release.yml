@@ -50,9 +50,11 @@ jobs:
           TAG="${{ inputs.tag_name }}"
         else
           TAG=${GITHUB_REF#refs/tags/}
+          TAG=${GITHUB_REF#refs/heads/main}
+          VERSION_NAME=${TAG#v}
         fi
 
-        VERSION_NAME=${TAG#v}
+        
         # Fallback if empty or invalid
         if [ -z "$VERSION_NAME" ]; then
           VERSION_NAME="1.0"
