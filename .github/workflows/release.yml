@@ -50,11 +50,9 @@ jobs:
           TAG="${{ inputs.tag_name }}"
         else
           TAG=${GITHUB_REF#refs/tags/}
-          TAG=${GITHUB_REF#refs/heads/main}
-          VERSION_NAME=${TAG#v}
         fi
 
-        
+        VERSION_NAME=${TAG#v}
         # Fallback if empty or invalid
         if [ -z "$VERSION_NAME" ]; then
           VERSION_NAME="1.0"
@@ -111,7 +109,11 @@ jobs:
           echo "$CHANGELOG"
           echo "EOF"
         } >> "$GITHUB_OUTPUT"
-        
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BankSMS-${{ env.VERSION_NAME }}
+        path: BankSMS-${{ env.VERSION_NAME }}.apk
     # 🚀 Upload to GitHub Release
     - name: Upload Release
       if: |
