@@ -33,6 +33,7 @@ The parser currently includes bank/wallet-specific logic for:
 - BOA (Bank of Abyssinia)
 - Telebirr / Ethio telecom messages
 - Enat Bank
+- etc..
 
 It extracts key transaction fields such as:
 
