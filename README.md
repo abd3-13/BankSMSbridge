@@ -105,9 +105,3 @@ These are required for receiving/parsing SMS and later syncing to Firefly III ov
 4. Verify records are created in local Room storage.
 
 ---
-
-## Project Status
-
-This repository is currently an **SMS capture + parsing + local persistence foundation** for Firefly III integration.
-
-The sync-to-Firefly and retry pipeline is clearly intended by the data model/status design and is planned as the next implementation phase.
